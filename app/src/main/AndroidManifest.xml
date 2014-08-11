@@ -3,8 +3,10 @@
     package="spaceproblems.camerathingy" >
 
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera"
+                  android:required="true"/>
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <application
@@ -26,16 +28,11 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_display_camera"
             android:parentActivityName=".TurnOnCamera"
+            android:screenOrientation="portrait"
             android:theme="@style/FullscreenTheme" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="spaceproblems.camerathingy.TurnOnCamera" />
-        </activity>
-        <activity
-            android:name=".FullscreenActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/title_activity_fullscreen"
-            android:theme="@style/FullscreenTheme" >
         </activity>
     </application>
 
