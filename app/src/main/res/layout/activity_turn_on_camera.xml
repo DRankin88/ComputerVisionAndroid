@@ -7,15 +7,17 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context=".TurnOnCamera"
-    android:visibility="visible">
+    android:visibility="visible"
+    android:background="@color/black_overlay">
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Start Camera"
+        android:text="@string/start_camera"
         android:id="@+id/startCamera"
         android:onClick="startCamera"
-        android:layout_centerVertical="true"
+        android:layout_marginTop="343dp"
+        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

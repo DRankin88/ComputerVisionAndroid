@@ -5,15 +5,15 @@ import spaceproblems.camerathingy.utils.SystemUiHider;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Camera;
+import android.media.ThumbnailUtils;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -21,16 +21,16 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
-import android.widget.Button;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -83,6 +83,10 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
     private File pictureFile;
     private Camera mCamera;
     private boolean capturing = false;
+    private SimpleAdapter mAdapter;
+    //    private ExtendedSimpleAdapter mExtendedSimpleAdapter;
+    private ArrayAdapter mArrayAdapter;
+    private ImageAdapter mImageAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,7 +98,15 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
 //        final View contentView = findViewById(R.id.fullscreen_content);
         final View contentView = findViewById(R.id.mySurfaceView);
+        final ListView picturesView = (ListView) findViewById(R.id.photoThumbnailsListView);
 
+//        mAdapter = new SimpleAdapter(this, getThumbNails(), android.R.layout.simple_list_item_1, new String[]{"planet"}, new int[]{android.R.id.text1});
+//        mExtendedSimpleAdapter = new ExtendedSimpleAdapter(this, getThumbNails(), android.R.layout.simple_list_item_1, new String[]{"planet"}, new int[]{android.R.id.text1});
+//        picturesView.setAdapter(mExtendedSimpleAdapter);
+
+//        mArrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, getThumbNails());
+        mImageAdapter = new ImageAdapter(this, R.layout.listview_item_row, getThumbNails());
+        picturesView.setAdapter(mImageAdapter);
 
         // Set up an instance of SystemUiHider to control the system UI for
         // this activity.
@@ -128,8 +140,11 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
 //                            // If the ViewPropertyAnimator APIs aren't
 //                            // available, simply show or hide the in-layout UI
 //                            // controls.
-                            controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
-//                        }
+                        controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
+//                        Bitmap[] ThumbImage = getThumbNails();
+                        picturesView.setVisibility(visible ? View.VISIBLE : View.GONE);
+//                        picturesView.
+//                         }
 
                         if (visible && AUTO_HIDE) {
                             // Schedule a hide().
@@ -364,7 +379,7 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES), "MyCameraAppThingy");
         long size = getFolderSize(mediaStorageDir);
-        while (size > 2000000) {
+        while (size > 20000000) {
             Log.d(TAG, "PURGING DIRECTORY");
             purgeOldestFile(mediaStorageDir);
             size = getFolderSize(mediaStorageDir);
@@ -414,7 +429,29 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
         return mediaFile;
     }
 
-    private byte[] greyScaledImage(byte[] data){
+    private BitmapDrawable[] getThumbNails() {
+
+        File dir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), "MyCameraAppThingy");
+//        int numberOfImages = (int) getFolderSize(dir);
+//        ArrayList<Map<String, String>> images = new ArrayList<Map<String, String>>();
+//        int size = dir.listFiles().length;
+        BitmapDrawable[] images = new BitmapDrawable[20];
+        int i = 0;
+        for (File file : dir.listFiles()) {
+            Bitmap image = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(file.getAbsolutePath()),
+                    192, 192);
+            images[i] = new BitmapDrawable(image);
+//            HashMap<String, String> entry = new HashMap<String, String>();
+//            entry.put(file.getName(), file.getAbsolutePath());
+//            images.add(entry);
+
+            i++;
+        }
+        return images;
+    }
+
+    private byte[] greyScaledImage(byte[] data) {
 
         return data;
 
