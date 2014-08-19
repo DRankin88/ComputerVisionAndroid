@@ -5,7 +5,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_display_camera">displayCamera</string>
-    <string name="startCapturing">Start Capturing Photos</string>
+    <string name="startCapturing">Toggle Capturing Photos</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_fullscreen">FullscreenActivity</string>
 

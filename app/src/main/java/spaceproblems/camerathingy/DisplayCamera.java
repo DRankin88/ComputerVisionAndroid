@@ -50,7 +50,7 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
      */
-    private static final boolean AUTO_HIDE = true;
+    private static final boolean AUTO_HIDE = false;
 
     /**
      * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
@@ -107,29 +107,29 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
                     int mShortAnimTime;
 
                     @Override
-                    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+                    @TargetApi(Build.VERSION_CODES.KITKAT)
                     public void onVisibilityChange(boolean visible) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-                            // If the ViewPropertyAnimator API is available
-                            // (Honeycomb MR2 and later), use it to animate the
-                            // in-layout UI controls at the bottom of the
-                            // screen.
-                            if (mControlsHeight == 0) {
-                                mControlsHeight = controlsView.getHeight();
-                            }
-                            if (mShortAnimTime == 0) {
-                                mShortAnimTime = getResources().getInteger(
-                                        android.R.integer.config_shortAnimTime);
-                            }
-                            controlsView.animate()
-                                    .translationY(visible ? 0 : mControlsHeight)
-                                    .setDuration(mShortAnimTime);
-                        } else {
-                            // If the ViewPropertyAnimator APIs aren't
-                            // available, simply show or hide the in-layout UI
-                            // controls.
+//                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+//                            // If the ViewPropertyAnimator API is available
+//                            // (Honeycomb MR2 and later), use it to animate the
+//                            // in-layout UI controls at the bottom of the
+//                            // screen.
+//                            if (mControlsHeight == 0) {
+//                                mControlsHeight = controlsView.getHeight();
+//                            }
+//                            if (mShortAnimTime == 0) {
+//                                mShortAnimTime = getResources().getInteger(
+//                                        android.R.integer.config_shortAnimTime);
+//                            }
+//                            controlsView.animate()
+//                                    .translationY(visible ? 0 : mControlsHeight)
+//                                    .setDuration(mShortAnimTime);
+//                        } else {
+//                            // If the ViewPropertyAnimator APIs aren't
+//                            // available, simply show or hide the in-layout UI
+//                            // controls.
                             controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
-                        }
+//                        }
 
                         if (visible && AUTO_HIDE) {
                             // Schedule a hide().
@@ -153,7 +153,7 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.startCapturing).setOnTouchListener(mDelayHideTouchListener);
+//        findViewById(R.id.startCapturing).setOnTouchListener(mDelayHideTouchListener);
 
         mSurfaceView = (SurfaceView) findViewById(R.id.mySurfaceView);
         SurfaceHolder surfaceHolder = mSurfaceView.getHolder();
@@ -172,7 +172,7 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
 
                 try {
                     FileOutputStream fos = new FileOutputStream(pictureFile);
-                    data = greyScaledImage();
+                    data = greyScaledImage(data);
                     fos.write(data);
                     fos.close();
                     displayToast(pictureFile);
@@ -257,9 +257,9 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
     /**
      * Set up the {@link android.app.ActionBar}, if the API is available.
      */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    @TargetApi(Build.VERSION_CODES.KITKAT)
     private void setupActionBar() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             // Show the Up button in the action bar.
             getActionBar().setDisplayHomeAsUpEnabled(true);
         }
@@ -416,7 +416,7 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
 
     private byte[] greyScaledImage(byte[] data){
 
-
+        return data;
 
     }
 
