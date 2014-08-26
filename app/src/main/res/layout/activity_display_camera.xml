@@ -59,9 +59,11 @@
         <ListView
             android:layout_width="@android:dimen/thumbnail_width"
             android:layout_height="fill_parent"
-            android:id="@+id/photoThumbnailsListView"
+            android:id="@android:id/list"
             android:layout_gravity="top|left|center_horizontal"
-            android:layout_marginBottom="@dimen/abc_action_bar_stacked_max_height" />
+            android:layout_marginBottom="@dimen/abc_action_bar_stacked_max_height"
+            android:longClickable="false"
+            android:clickable="false" />
 
     </FrameLayout>
 </FrameLayout>

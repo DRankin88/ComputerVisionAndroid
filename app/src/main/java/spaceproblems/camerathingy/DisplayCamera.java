@@ -1,10 +1,14 @@
 package spaceproblems.camerathingy;
 
+
 import spaceproblems.camerathingy.utils.SystemUiHider;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
+import android.app.ListActivity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -21,10 +25,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
-import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
 import java.io.File;
@@ -39,13 +40,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 
-/**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
- *
- * @see SystemUiHider
- */
-public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
+public class DisplayCamera extends ListActivity implements SurfaceHolder
+        .Callback
+{
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -76,36 +73,30 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
      */
     private SystemUiHider mSystemUiHider;
     private SurfaceView mSurfaceView;
-    private ImageView mImageView;
     private Camera.PictureCallback mPicture;
-    //    private Preview mPreview;
     private Timer timer;
     private File pictureFile;
     private Camera mCamera;
     private boolean capturing = false;
-    private SimpleAdapter mAdapter;
-    //    private ExtendedSimpleAdapter mExtendedSimpleAdapter;
-    private ArrayAdapter mArrayAdapter;
     private ImageAdapter mImageAdapter;
+    private BitmapDrawable[] thumbNails;
+    private String[] paths;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_display_camera);
         setupActionBar();
 
+        loadThumbNails();
+
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
-//        final View contentView = findViewById(R.id.fullscreen_content);
         final View contentView = findViewById(R.id.mySurfaceView);
-        final ListView picturesView = (ListView) findViewById(R.id.photoThumbnailsListView);
-
-//        mAdapter = new SimpleAdapter(this, getThumbNails(), android.R.layout.simple_list_item_1, new String[]{"planet"}, new int[]{android.R.id.text1});
-//        mExtendedSimpleAdapter = new ExtendedSimpleAdapter(this, getThumbNails(), android.R.layout.simple_list_item_1, new String[]{"planet"}, new int[]{android.R.id.text1});
-//        picturesView.setAdapter(mExtendedSimpleAdapter);
-
-//        mArrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, getThumbNails());
-        mImageAdapter = new ImageAdapter(this, R.layout.listview_item_row, getThumbNails());
+        final ListView picturesView = getListView();
+        mImageAdapter = new ImageAdapter(this, R.layout.listview_item_row,
+                thumbNails, paths);
         picturesView.setAdapter(mImageAdapter);
 
         // Set up an instance of SystemUiHider to control the system UI for
@@ -113,40 +104,19 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
         mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
         mSystemUiHider.setup();
         mSystemUiHider
-                .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
-                    // Cached values.
-                    int mControlsHeight;
-                    int mShortAnimTime;
+                .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener()
+                {
 
                     @Override
                     @TargetApi(Build.VERSION_CODES.KITKAT)
-                    public void onVisibilityChange(boolean visible) {
-//                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//                            // If the ViewPropertyAnimator API is available
-//                            // (Honeycomb MR2 and later), use it to animate the
-//                            // in-layout UI controls at the bottom of the
-//                            // screen.
-//                            if (mControlsHeight == 0) {
-//                                mControlsHeight = controlsView.getHeight();
-//                            }
-//                            if (mShortAnimTime == 0) {
-//                                mShortAnimTime = getResources().getInteger(
-//                                        android.R.integer.config_shortAnimTime);
-//                            }
-//                            controlsView.animate()
-//                                    .translationY(visible ? 0 : mControlsHeight)
-//                                    .setDuration(mShortAnimTime);
-//                        } else {
-//                            // If the ViewPropertyAnimator APIs aren't
-//                            // available, simply show or hide the in-layout UI
-//                            // controls.
-                        controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
-//                        Bitmap[] ThumbImage = getThumbNails();
-                        picturesView.setVisibility(visible ? View.VISIBLE : View.GONE);
-//                        picturesView.
-//                         }
+                    public void onVisibilityChange(boolean visible)
+                    {
 
-                        if (visible && AUTO_HIDE) {
+                        controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
+                        picturesView.setVisibility(visible ? View.VISIBLE : View.GONE);
+
+                        if (visible && AUTO_HIDE)
+                        {
                             // Schedule a hide().
                             delayedHide(AUTO_HIDE_DELAY_MILLIS);
                         }
@@ -154,12 +124,16 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
                 });
 
         // Set up the user interaction to manually show or hide the system UI.
-        contentView.setOnClickListener(new View.OnClickListener() {
+        contentView.setOnClickListener(new View.OnClickListener()
+        {
             @Override
-            public void onClick(View view) {
-                if (TOGGLE_ON_CLICK) {
+            public void onClick(View view)
+            {
+                if (TOGGLE_ON_CLICK)
+                {
                     mSystemUiHider.toggle();
-                } else {
+                } else
+                {
                     mSystemUiHider.show();
                 }
             }
@@ -174,26 +148,32 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
         SurfaceHolder surfaceHolder = mSurfaceView.getHolder();
         surfaceHolder.addCallback(this);
 
-        mPicture = new Camera.PictureCallback() {
+        mPicture = new Camera.PictureCallback()
+        {
 
             @Override
-            public void onPictureTaken(byte[] data, Camera camera) {
+            public void onPictureTaken(byte[] data, Camera camera)
+            {
 
                 pictureFile = getOutputMediaFile(1);
-                if (pictureFile == null) {
+                if (pictureFile == null)
+                {
                     Log.d(TAG, "Error creating media file, check storage permissions: ");
                     return;
                 }
 
-                try {
+                try
+                {
                     FileOutputStream fos = new FileOutputStream(pictureFile);
                     data = greyScaledImage(data);
                     fos.write(data);
                     fos.close();
                     displayToast(pictureFile);
-                } catch (FileNotFoundException e) {
+                } catch (FileNotFoundException e)
+                {
                     Log.d(TAG, "File not found: " + e.getMessage());
-                } catch (IOException e) {
+                } catch (IOException e)
+                {
                     Log.d(TAG, "Error accessing file: " + e.getMessage());
                 }
             }
@@ -203,19 +183,24 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
-                               int height) {
+                               int height)
+    {
     }
 
     @Override
-    public void surfaceCreated(SurfaceHolder holder) {
+    public void surfaceCreated(SurfaceHolder holder)
+    {
 
-        if (safeCameraOpen()) {
+        if (safeCameraOpen())
+        {
             mCamera.setDisplayOrientation(90);
             Camera.Parameters parameters = mCamera.getParameters();
 
-            try {
+            try
+            {
                 mCamera.setPreviewDisplay(holder);
-            } catch (IOException e) {
+            } catch (IOException e)
+            {
                 mCamera.release();
             }
 
@@ -226,24 +211,29 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
+    public void surfaceDestroyed(SurfaceHolder holder)
+    {
 
         // Surface will be destroyed when we return, so stop the preview.
-        if (mCamera != null) {
+        if (mCamera != null)
+        {
             // Call stopPreview() to stop updating the preview surface.
             mCamera.stopPreview();
             releaseCameraAndPreview();
         }
     }
 
-    private boolean safeCameraOpen() {
+    private boolean safeCameraOpen()
+    {
         boolean qOpened = false;
 
-        try {
+        try
+        {
             releaseCameraAndPreview();
             mCamera = Camera.open();
             qOpened = (mCamera != null);
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             Log.e(getString(R.string.app_name), "failed to open Camera");
             e.printStackTrace();
         }
@@ -251,16 +241,19 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
         return qOpened;
     }
 
-    private void releaseCameraAndPreview() {
+    private void releaseCameraAndPreview()
+    {
 
-        if (mCamera != null) {
+        if (mCamera != null)
+        {
             mCamera.release();
             mCamera = null;
         }
     }
 
     @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
+    protected void onPostCreate(Bundle savedInstanceState)
+    {
         super.onPostCreate(savedInstanceState);
 
         // Trigger the initial hide() shortly after the activity has been
@@ -273,17 +266,21 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
      * Set up the {@link android.app.ActionBar}, if the API is available.
      */
     @TargetApi(Build.VERSION_CODES.KITKAT)
-    private void setupActionBar() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+    private void setupActionBar()
+    {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+        {
             // Show the Up button in the action bar.
             getActionBar().setDisplayHomeAsUpEnabled(true);
         }
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
         int id = item.getItemId();
-        if (id == android.R.id.home) {
+        if (id == android.R.id.home)
+        {
             // This ID represents the Home or Up button. In the case of this
             // activity, the Up button is shown. Use NavUtils to allow users
             // to navigate up one level in the application structure. For
@@ -291,7 +288,7 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
-            // TODO: If Settings has multiple levels, Up should navigate up
+            // If Settings has multiple levels, Up should navigate up
             // that hierarchy.
             NavUtils.navigateUpFromSameTask(this);
             return true;
@@ -304,10 +301,13 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
      * system UI. This is to prevent the jarring behavior of controls going away
      * while interacting with activity UI.
      */
-    View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
+    View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener()
+    {
         @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            if (AUTO_HIDE) {
+        public boolean onTouch(View view, MotionEvent motionEvent)
+        {
+            if (AUTO_HIDE)
+            {
                 delayedHide(AUTO_HIDE_DELAY_MILLIS);
             }
             return false;
@@ -315,9 +315,11 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
     };
 
     Handler mHideHandler = new Handler();
-    Runnable mHideRunnable = new Runnable() {
+    Runnable mHideRunnable = new Runnable()
+    {
         @Override
-        public void run() {
+        public void run()
+        {
             mSystemUiHider.hide();
         }
     };
@@ -326,23 +328,29 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
      * Schedules a call to hide() in [delay] milliseconds, canceling any
      * previously scheduled calls.
      */
-    private void delayedHide(int delayMillis) {
+    private void delayedHide(int delayMillis)
+    {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
 
-    public void startCapturing(View view) {
+    public void startCapturing(View view)
+    {
 
-        if (capturing == true) {
+        if (capturing == true)
+        {
             capturing = false;
             timer.cancel();
             return;
-        } else if (capturing == false) {
+        } else if (capturing == false)
+        {
             capturing = true;
             timer = new Timer();
-            timer.schedule(new TimerTask() {
+            timer.schedule(new TimerTask()
+            {
                 @Override
-                public void run() {
+                public void run()
+                {
                     checkDirectorySizeAndPurge();
                     mCamera.startPreview();
                     mCamera.takePicture(null, null, mPicture);
@@ -351,7 +359,8 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
         }
     }
 
-    private void displayToast(File picture) {
+    private void displayToast(File picture)
+    {
 
         Context context = getApplicationContext();
         long fileSize = picture.length();
@@ -361,12 +370,15 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
         toast.show();
     }
 
-    private void purgeOldestFile(File directory) {
+    private void purgeOldestFile(File directory)
+    {
 
         File[] files = directory.listFiles();
 
-        Arrays.sort(files, new Comparator<File>() {
-            public int compare(File f1, File f2) {
+        Arrays.sort(files, new Comparator<File>()
+        {
+            public int compare(File f1, File f2)
+            {
                 return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
             }
         });
@@ -375,31 +387,35 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
 
     }
 
-    private void checkDirectorySizeAndPurge() {
+    private void checkDirectorySizeAndPurge()
+    {
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES), "MyCameraAppThingy");
         long size = getFolderSize(mediaStorageDir);
-        while (size > 20000000) {
+        while (size > 20000000)
+        {
             Log.d(TAG, "PURGING DIRECTORY");
             purgeOldestFile(mediaStorageDir);
             size = getFolderSize(mediaStorageDir);
         }
     }
 
-    public long getFolderSize(File dir) {
+    public long getFolderSize(File dir)
+    {
         long size = 0;
-        for (File file : dir.listFiles()) {
+        for (File file : dir.listFiles())
+        {
             size += file.length();
         }
         Log.d(TAG, "Folder size " + size);
         return size;
     }
 
-
     /**
      * Create a File for saving an image or video
      */
-    private static File getOutputMediaFile(int type) {
+    private static File getOutputMediaFile(int type)
+    {
         // To be safe, you should check that the SDCard is mounted
         // using Environment.getExternalStorageState() before doing this.
 
@@ -409,8 +425,10 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
         // between applications and persist after your app has been uninstalled.
 
         // Create the storage directory if it does not exist
-        if (!mediaStorageDir.exists()) {
-            if (!mediaStorageDir.mkdirs()) {
+        if (!mediaStorageDir.exists())
+        {
+            if (!mediaStorageDir.mkdirs())
+            {
                 Log.d("MyCameraAppThingy", "failed to create directory");
                 return null;
             }
@@ -419,42 +437,75 @@ public class DisplayCamera extends Activity implements SurfaceHolder.Callback {
         // Create a media file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         File mediaFile;
-        if (type == 1) {
+        if (type == 1)
+        {
             mediaFile = new File(mediaStorageDir.getPath() + File.separator +
                     "IMG_" + timeStamp + ".jpg");
-        } else {
+        }
+        else
+        {
             return null;
         }
 
         return mediaFile;
     }
 
-    private BitmapDrawable[] getThumbNails() {
+    private void loadThumbNails()
+    {
 
         File dir = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES), "MyCameraAppThingy");
-//        int numberOfImages = (int) getFolderSize(dir);
-//        ArrayList<Map<String, String>> images = new ArrayList<Map<String, String>>();
-//        int size = dir.listFiles().length;
-        BitmapDrawable[] images = new BitmapDrawable[20];
+        int size = dir.listFiles().length;
+        BitmapDrawable[] images = new BitmapDrawable[size];
+        String[] localPaths = new String[size];
         int i = 0;
-        for (File file : dir.listFiles()) {
-            Bitmap image = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(file.getAbsolutePath()),
-                    192, 192);
-            images[i] = new BitmapDrawable(image);
-//            HashMap<String, String> entry = new HashMap<String, String>();
-//            entry.put(file.getName(), file.getAbsolutePath());
-//            images.add(entry);
-
+        thumbNails = null;
+        paths = null;
+        for (File file : dir.listFiles())
+        {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = false;
+            options.inPreferredConfig = Bitmap.Config.RGB_565;
+            options.inDither = true;
+            Bitmap image = ThumbnailUtils.extractThumbnail(BitmapFactory
+                            .decodeFile(file.getAbsolutePath(),options),
+                            192, 192);
+            images[i] = new BitmapDrawable(getResources(), image);
+            localPaths[i] = file.getAbsolutePath();
             i++;
         }
-        return images;
+        thumbNails = images;
+        paths = localPaths;
     }
 
-    private byte[] greyScaledImage(byte[] data) {
+    private byte[] greyScaledImage(byte[] data)
+    {
 
         return data;
 
     }
 
+    @Override
+    public void onListItemClick(ListView lv, View v, int position, long id)
+    {
+
+        thumbNails = null;
+        Log.d(TAG, "List item clicked: " + position);
+        Intent intent = new Intent(this, InteractWithImage.class);
+        Bundle b = new Bundle();
+        b.putString("image", paths[position]);
+        intent.putExtras(b);
+        startActivity(intent);
+
+    }
+
+//    @Override
+//    protected void onResume()
+//    {
+//
+//        loadThumbNails();
+//        mImageAdapter.notifyDataSetChanged();
+//        super.onResume();
+//
+//    }
 }

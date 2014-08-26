@@ -9,8 +9,9 @@
         android:minSdkVersion="19"
         android:targetSdkVersion="19" />
 
-    <uses-feature android:name="android.hardware.camera"
-                  android:required="true"/>
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <application
@@ -37,6 +38,16 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="spaceproblems.camerathingy.TurnOnCamera" />
+        </activity>
+        <activity
+            android:name=".InteractWithImage"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_interact_with_image"
+            android:parentActivityName=".DisplayCamera"
+            android:theme="@style/FullscreenTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="spaceproblems.camerathingy.DisplayCamera" />
         </activity>
     </application>
 
